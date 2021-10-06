@@ -1,5 +1,5 @@
 """A set of functions that generate simple knit-graph structures useful for debugging"""
-from knit_graphs.Knit_Graph import Knit_Graph
+from knit_graphs.Knit_Graph import Knit_Graph, Pull_Direction
 from knit_graphs.Yarn import Yarn
 
 
@@ -45,8 +45,35 @@ def rib(width: int = 4, height: int = 4, rib_width: int = 1) -> Knit_Graph:
     assert width > 0
     assert height > 0
     assert rib_width <= width
-    # Todo Implement
-    raise NotImplementedError
+    # TODO: Implement
+
+    knit_graph = Knit_Graph()
+    yarn = Yarn("Purple")
+    knit_graph.add_yarn(yarn)
+
+    # cast on
+    first_course = []
+    for _ in range(0, width):
+        loop_id, loop = yarn.add_loop_to_end()
+        first_course.append(loop_id)
+        knit_graph.add_loop(loop)
+
+    # make new courses of loops and connect them to the last course
+    prior_course = first_course
+    pull_direction = Pull_Direction.BtF
+    for _ in range(1, height):
+        next_course = []
+        for idx, parent_id in enumerate(reversed(prior_course), start=1):
+            if (idx % rib_width == 0):
+                pull_direction = pull_direction.opposite()
+            
+            child_id, child = yarn.add_loop_to_end()
+            next_course.append(child_id)
+            knit_graph.add_loop(child)
+            knit_graph.connect_loops(parent_id, child_id, pull_direction)
+        prior_course = next_course
+
+    return knit_graph
 
 
 def seed(width: int = 4, height=4) -> Knit_Graph:
@@ -58,8 +85,33 @@ def seed(width: int = 4, height=4) -> Knit_Graph:
     """
     assert width > 0
     assert height > 0
-    # Todo Implement
-    raise NotImplementedError
+    # TODO: Implement
+
+    knit_graph = Knit_Graph()
+    yarn = Yarn("White")
+    knit_graph.add_yarn(yarn)
+
+    # cast on
+    first_course = []
+    for _ in range(0, width):
+        loop_id, loop = yarn.add_loop_to_end()
+        first_course.append(loop_id)
+        knit_graph.add_loop(loop)
+
+    # make new courses of loops and connect them to the last course
+    prior_course = first_course
+    pull_direction = Pull_Direction.BtF
+    for _ in range(1, height):
+        next_course = []
+        for parent_id in reversed(prior_course):
+            pull_direction = pull_direction.opposite()
+            child_id, child = yarn.add_loop_to_end()
+            next_course.append(child_id)
+            knit_graph.add_loop(child)
+            knit_graph.connect_loops(parent_id, child_id, pull_direction)
+        prior_course = next_course
+
+    return knit_graph
 
 
 def twisted_stripes(width: int = 4, height=5, left_twists: bool = True) -> Knit_Graph:

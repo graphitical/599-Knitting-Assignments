@@ -48,11 +48,16 @@ class Knit_Graph:
         """
         :param loop: the loop to be added in as a node in the graph
         """
-        # Todo: Implement
+        # TODO: Implement
         # Add a node with the loop id to the graph with a parameter keyed to it at "loop" to store the loop
+        self.graph.add_node(loop.loop_id, loop=loop)
+
         # If this loop is not on its specified yarn add it to the end of the yarn
+        if loop.loop_id not in self.yarns[loop.yarn_id]:
+            self.yarns[loop.yarn_id].add_loop_to_end(loop.loop_id, loop, loop.is_twisted)
+
         # Add the loop to the loops dictionary
-        raise NotImplementedError
+        self.loops[loop.loop_id] = loop
 
     def add_yarn(self, yarn: Yarn):
         """
@@ -72,10 +77,12 @@ class Knit_Graph:
         :param pull_direction: the direction the child is pulled through the parent
         :param stack_position: The position to insert the parent into, by default add on top of the stack
         """
-        # Todo: Implement
+        # TODO: Implement
         # Make an edge in the graph from the parent loop to the child loop. The edge should have three parameters:
         # "pull_direction", "depth", and "parent_offset"
+        self.graph.add_edge(parent_loop_id, child_loop_id, pull_direction=pull_direction, depth=depth, parent_offset=parent_offset)
         # add the parent loop to the child's parent loop stack
+        self.loops[child_loop_id].add_parent_loop(parent_loop_id);
 
     def get_courses(self) -> Tuple[Dict[int, float], Dict[float, List[int]]]:
         """
@@ -84,15 +91,38 @@ class Knit_Graph:
          Evaluation of a course structure should be done in O(n*m) time where n is the number of loops in the graph and
          m is the largest number of parent loops pulled through a single loop (rarely more than 3).
         :return: A dictionary of loop_ids to the course they are on,
-        a dictionary or course ids to the loops on that course in the order of creation
+                 and a dictionary of course ids to the loops on that course in the order of creation
         The first set of loops in the graph is on course 0.
         A course change occurs when a loop has a parent loop that is in the last course.
         """
-        # Todo: Implement
+        # TODO: Implement
         # A course  of a knitted structure is a set of neighboring loops that do not involve loops on the prior course
         # The first course (starting with loop 0) is the 0th course
         # Note that not having a parent loop does not mean a loop is on course 0, consider yarn-overs
-        raise NotImplementedError
+        loop2course = dict()
+        course2loop = dict()
+        # First course is the 0th course
+        course_id = 0
+        # Check all the loops in the graph
+        for child_loop_id, child_loop in self.loops.items():
+            # See what the parent loops are for this loop
+            for parent_loop_id in child_loop.parent_loops:
+                # If this loop has a parent that is already in a course we are now in a new course
+                if ((parent_loop_id in loop2course) and loop2course[parent_loop_id] == course_id):
+                    course_id += 1    
+            # Store the course we are in for the child_loop
+            loop2course[child_loop_id] = course_id
+
+        # for k, v in loop2course.items():
+        #     print(f'Loop {k}: Course {v}')
+
+        for k, v in loop2course.items():
+            course2loop.setdefault(v, []).append(k)
+
+        # for k, v in course2loop.items():
+        #     print(f'Course: {k}\nLoops: {v}')
+
+        return loop2course, course2loop
 
     def __contains__(self, item: Union[int, Loop]) -> bool:
         """
