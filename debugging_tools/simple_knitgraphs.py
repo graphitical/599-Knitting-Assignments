@@ -48,7 +48,7 @@ def rib(width: int = 4, height: int = 4, rib_width: int = 1) -> Knit_Graph:
     # TODO: Implement
 
     knit_graph = Knit_Graph()
-    yarn = Yarn("Purple")
+    yarn = Yarn("Purple", knit_graph)
     knit_graph.add_yarn(yarn)
 
     # cast on
@@ -60,9 +60,9 @@ def rib(width: int = 4, height: int = 4, rib_width: int = 1) -> Knit_Graph:
 
     # make new courses of loops and connect them to the last course
     prior_course = first_course
-    pull_direction = Pull_Direction.BtF
     for _ in range(1, height):
         next_course = []
+        pull_direction = Pull_Direction.FtB
         for idx, parent_id in enumerate(reversed(prior_course), start=1):
             # flip stitch type for ribbing effect
             if (idx % rib_width == 0):
@@ -89,7 +89,7 @@ def seed(width: int = 4, height=4) -> Knit_Graph:
     # TODO: Implement
 
     knit_graph = Knit_Graph()
-    yarn = Yarn("White")
+    yarn = Yarn("White", knit_graph)
     knit_graph.add_yarn(yarn)
 
     # cast on
@@ -101,9 +101,9 @@ def seed(width: int = 4, height=4) -> Knit_Graph:
 
     # make new courses of loops and connect them to the last course
     prior_course = first_course
-    pull_direction = Pull_Direction.BtF
     for _ in range(1, height):
         next_course = []
+        pull_direction = Pull_Direction.FtB
         for parent_id in reversed(prior_course):
             pull_direction = pull_direction.opposite()
             child_id, child = yarn.add_loop_to_end()
@@ -123,7 +123,7 @@ def twisted_stripes(width: int = 4, height=5, left_twists: bool = True) -> Knit_
     :return: A knitgraph with repeating pattern of twisted stitches surrounded by knit wales
     """
     knitGraph = Knit_Graph()
-    yarn = Yarn("yarn", knit_graph)
+    yarn = Yarn("yarn", knitGraph)
     knitGraph.add_yarn(yarn)
 
     # Add the first course of loops
