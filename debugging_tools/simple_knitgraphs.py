@@ -64,6 +64,7 @@ def rib(width: int = 4, height: int = 4, rib_width: int = 1) -> Knit_Graph:
     for _ in range(1, height):
         next_course = []
         for idx, parent_id in enumerate(reversed(prior_course), start=1):
+            # flip stitch type for ribbing effect
             if (idx % rib_width == 0):
                 pull_direction = pull_direction.opposite()
             

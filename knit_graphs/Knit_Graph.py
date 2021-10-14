@@ -81,6 +81,7 @@ class Knit_Graph:
         # Make an edge in the graph from the parent loop to the child loop. The edge should have three parameters:
         # "pull_direction", "depth", and "parent_offset"
         self.graph.add_edge(parent_loop_id, child_loop_id, pull_direction=pull_direction, depth=depth, parent_offset=parent_offset)
+
         # add the parent loop to the child's parent loop stack
         self.loops[child_loop_id].add_parent_loop(parent_loop_id);
 
@@ -113,14 +114,9 @@ class Knit_Graph:
             # Store the course we are in for the child_loop
             loop2course[child_loop_id] = course_id
 
-        # for k, v in loop2course.items():
-        #     print(f'Loop {k}: Course {v}')
-
+        # Invert loop2course dictionary
         for k, v in loop2course.items():
             course2loop.setdefault(v, []).append(k)
-
-        # for k, v in course2loop.items():
-        #     print(f'Course: {k}\nLoops: {v}')
 
         return loop2course, course2loop
 
