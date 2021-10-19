@@ -60,6 +60,12 @@ class Knitout_Generator:
         #  build a "knit" carriage pass in the direction with the given carrier_set
         #  add that carriage pass to the instructions (i.e., _add_carriage_pass(...)).
         #  I recommend including a course comment with the course id
+
+
+        instruction_type = Instruction_Type.Knit
+        needles_to_instrution_parameters = 
+        carriage_pass = Carriage_Pass(instruction_type=instruction_type, direction=direction, needles_to_instruction_parameters=needles_to_instruction_parameters, carrier_set=carrier_set)
+        self._add_carriage_pass(carriage_pass, first_comment=f"Course {course_number}")
         raise NotImplementedError("Implement knit carriage pass")
 
     def _do_xfers_for_row(self, loop_ids: List[int], direction: Pass_Direction) -> Dict[int, Needle]:
@@ -88,6 +94,8 @@ class Knitout_Generator:
         parent loops mapped to their offsets in the front of cables
         parent loops mapped to their offsets in the back of cables
         """
+
+
         parent_loops_to_needles: Dict[int, Needle] = {}  # key loop_ids to the needle they are currently on
         loop_id_to_target_needle: Dict[int, Needle] = {}  # key loop_ids to the needle they need to be on to knit
         parents_to_offsets: Dict[int, int] = {}  # key parent loop_ids to their offset from their child
@@ -99,6 +107,8 @@ class Knitout_Generator:
         decrease_offsets: Dict[int, int] = {}  # key parent loop_id to the offset to their chidl
         # .... only includes parents involved in a decrease
         max_needle = len(loop_ids) - 1  # last needle being used to create this swatch
+
+
         for loop_pos, loop_id in enumerate(loop_ids):  # find target needle locations of each loop in the course
             parent_ids = [*self._knit_graph.graph.predecessors(loop_id)]
             for parent_id in parent_ids:  # find current needle of all parent loops
@@ -106,11 +116,16 @@ class Knitout_Generator:
                 assert parent_needle is not None, f"Parent loop {parent_id} is not held on a needle"
                 parent_loops_to_needles[parent_id] = parent_needle
             if len(parent_ids) == 0:  # yarn-over, yarn overs are made on front bed
-                # Todo: implement finding target needle for yarn-overs
+                # TODO: implement finding target needle for yarn-overs
                 #  yarn over needle position is dependent on the current Pass_Direction and the loop_pos (index in course)
                 #  if moving from the left to right, the target needle will be the index in the course
                 #  else, it will be the index in the course subtracted from the max_needle involved in the course
-                raise NotImplementedError
+                if direction == Pass_Direction.Left_to_Right:
+                    target_needle = loop_pos
+                else:
+                    target_needle = max_needle - loop_pos
+                loop_id_to_target_needle[loop_id] = target_needle
+
             elif len(parent_ids) == 1:  # knit, purl, may be in cable, no needle
                 parent_id = [*parent_ids][0]
                 parent_needle = parent_loops_to_needles[parent_id]
@@ -118,13 +133,22 @@ class Knitout_Generator:
                 cable_depth = self._knit_graph.graph[parent_id][loop_id]["depth"]
                 pull_direction = self._knit_graph.graph[parent_id][loop_id]["pull_direction"]
                 front_bed = pull_direction is Pull_Direction.BtF  # knit on front bed, purl on back bed
-                # Todo: implement finding target needle for this parent which may be in a cable
+                # TODO: implement finding target needle for this parent which may be in a cable
                 #  if there is a parent offset, this must be in a cable (depth != 0)
                 #  collect the cable_offset information if in a cable. Check if in front of the cable, or back of cable
                 #  collect the target needle information.
                 #  The target needle will be the offset from the parent_needle by the parent_offset
                 #  collect the parent offset information
-                raise NotImplementedError
+                if cable_depth > 0:
+                    front_cable_offsets[parent_id] = cable_depth
+                elif cable_depth < 0:
+                    back_cable_offsets[parent_id]  = cable_depth
+                else:
+                    print('Not in a cable')
+                target_needle = parent_needle - parent_offset
+                parents_to_offsets[parent_id] = parent_offset
+                loop_id_to_target_needle[loop_id] = target_needle
+                # raise NotImplementedError
             else:  # decrease, the bottom parent loop in the stack will be on the target needle
                 loop = self._knit_graph.loops[loop_id]
                 target_needle = None  # re-assigned on first iteration to needle of first parent
