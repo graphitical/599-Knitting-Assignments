@@ -1,6 +1,6 @@
 """The graph structure used to represent knitted objects"""
 from enum import Enum
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, Optional, List, Tuple, Union
 
 import networkx
 
@@ -36,7 +36,7 @@ class Knit_Graph:
     loops: Dict[int, Loop]
         A map of each unique loop id to its loop
     yarns: Dict[str, Yarn]
-         A list of Yarns used in the graph
+         Yarn Ids mapped to the corrisponding yarn
     """
 
     def __init__(self):
@@ -49,10 +49,13 @@ class Knit_Graph:
         """
         :param loop: the loop to be added in as a node in the graph
         """
+        # Add a node with the loop id to the graph with a parameter keyed to it at "loop" to store the loop
         self.graph.add_node(loop.loop_id, loop=loop)
         assert loop.yarn_id in self.yarns, f"No yarn {loop.yarn_id} in this graph"
-        if loop not in self.yarns[loop.yarn_id]:  # make sure the loop is on the yarn specified
+        # If this loop is not on its specified yarn add it to the end of the yarn
+        if loop not in self.yarns[loop.yarn_id]:
             self.yarns[loop.yarn_id].add_loop_to_end(loop_id=None, loop=loop)
+        # Add the loop to the loops dictionary
         self.loops[loop.loop_id] = loop
 
     def add_yarn(self, yarn: Yarn):
@@ -76,6 +79,7 @@ class Knit_Graph:
         assert parent_loop_id in self, f"parent loop {parent_loop_id} is not in this graph"
         assert child_loop_id in self, f"child loop {child_loop_id} is not in this graph"
         self.graph.add_edge(parent_loop_id, child_loop_id, pull_direction=pull_direction, depth=depth, parent_offset=parent_offset)
+        # add the parent loop to the child's parent loop stack
         child_loop = self[child_loop_id]
         parent_loop = self[parent_loop_id]
         child_loop.add_parent_loop(parent_loop, stack_position)
@@ -110,34 +114,39 @@ class Knit_Graph:
         course_to_loop_ids[course] = current_course
         return loop_ids_to_course, course_to_loop_ids
 
-    # @deprecated("Deprecated because this only works in rows, but not round construction")
-    def deprecated_get_course(self) -> Tuple[Dict[int, int], Dict[int, List[int]]]:
+    def deprecated_get_courses(self) -> Tuple[Dict[int, int], Dict[int, List[int]]]:
         """
+        Course information will be used to generate instruction for knitting machines and
+         visualizations that structure knitted objects like grids.
+         Evaluation of a course structure should be done in O(n*m) time where n is the number of loops in the graph and
+         m is the largest number of parent loops pulled through a single loop (rarely more than 3).
         :return: A dictionary of loop_ids to the course they are on,
-        a dictionary or course ids to the loops on that course in the order of creation
+                 and a dictionary of course ids to the loops on that course in the order of creation
         The first set of loops in the graph is on course 0.
         A course change occurs when a loop has a parent loop that is in the last course.
         """
-        loop_ids_to_course = {}
-        for loop_id in self.graph.nodes:
-            loop = self.loops[loop_id]
-            prior_id = loop.prior_loop_id(self)
-            if prior_id is None:  # the first loop in the graph
-                loop_ids_to_course[loop_id] = 0
-            elif self.graph.has_edge(prior_id, loop_id):  # stitch between the two creates a course change
-                loop_ids_to_course[loop_id] = loop_ids_to_course[prior_id] + 1
-            else:
-                loop_ids_to_course[loop_id] = loop_ids_to_course[prior_id]
+        loop2course = dict()
+        course2loop = dict()
+        # First course is the 0th course
+        course_id = 0
+        # Check all the loops in the graph
+        for child_loop_id, child_loop in self.loops.items():
+            # See what the parent loops are for this loop
+            for parent_loop_id in child_loop.parent_loops:
+                # If this loop has a parent that is already in a course we are now in a new course
+                if ((parent_loop_id in loop2course) and loop2course[parent_loop_id] == course_id):
+                    course_id += 1    
+            # Store the course we are in for the child_loop
+            loop2course[child_loop_id] = course_id
 
-        course_to_loop_ids = {}
-        for loop_id, course in loop_ids_to_course.items():
-            if course not in course_to_loop_ids:
-                course_to_loop_ids[course] = []
-            course_to_loop_ids[course].append(loop_id)
+        # Invert loop2course dictionary
+        for k, v in loop2course.items():
+            course2loop.setdefault(v, []).append(k)
+        
+        for course in course2loop:
+            course2loop[course].sort()
 
-        for course in course_to_loop_ids:
-            course_to_loop_ids[course].sort()
-        return loop_ids_to_course, course_to_loop_ids
+        return loop2course, course2loop
 
     def get_carriers(self) -> List[Yarn_Carrier]:
         """
@@ -145,7 +154,7 @@ class Knit_Graph:
         """
         return [yarn.carrier for yarn in self.yarns.values()]
 
-    def __contains__(self, item):
+    def __contains__(self, item: Union[int, Loop]) -> bool:
         """
         :param item: the loop being checked for in the graph
         :return: true if the loop_id of item or the loop is in the graph
@@ -154,8 +163,6 @@ class Knit_Graph:
             return self.graph.has_node(item)
         elif isinstance(item, Loop):
             return self.graph.has_node(item.loop_id)
-        else:
-            return False
 
     def __getitem__(self, item: int) -> Loop:
         """

@@ -45,7 +45,6 @@ def rib(width: int = 4, height: int = 4, rib_width: int = 1) -> Knit_Graph:
     assert width > 0
     assert height > 0
     assert rib_width <= width
-    # TODO: Implement
 
     knit_graph = Knit_Graph()
     yarn = Yarn("Purple", knit_graph)
@@ -86,7 +85,6 @@ def seed(width: int = 4, height=4) -> Knit_Graph:
     """
     assert width > 0
     assert height > 0
-    # TODO: Implement
 
     knit_graph = Knit_Graph()
     yarn = Yarn("White", knit_graph)

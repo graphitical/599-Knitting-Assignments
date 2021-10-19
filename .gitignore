@@ -142,3 +142,4 @@ dmypy.json
 !/sample_results/knitout/test_seed.k
 !/sample_results/knitout/test_stst.k
 !/sample_results/knitout/test_twists.k
+.vscode/launch.json
