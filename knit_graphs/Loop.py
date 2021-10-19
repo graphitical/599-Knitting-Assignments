@@ -36,11 +36,10 @@ class Loop:
         :param parent: the Loop to be added onto the stack
         :param stack_position: The position to insert the parent into, if None add on top of the stack
         """
-        # TODO: Implement based on Description
-        if stack_position is None:
-            self.parent_loops.append(parent)
-        else:
+        if stack_position is not None:
             self.parent_loops.insert(stack_position, parent)
+        else:
+            self.parent_loops.append(parent)
 
     @property
     def loop_id(self) -> int:
@@ -112,7 +111,7 @@ class Loop:
             twisted = ", twisted"
         else:
             twisted = ""
-        return f"{self.loop_id} on yarn {self.loop_id}{twisted}"
+        return f"{self.loop_id} on yarn {self.yarn_id}{twisted}"
 
     def __repr__(self):
         return str(self)
