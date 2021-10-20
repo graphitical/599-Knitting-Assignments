@@ -37,7 +37,11 @@ def cast_on(direction: Pass_Direction, carrier_id: int):
 
     direction = direction.opposite()
 
-    for needle in [*needles][0::2]:
+    start = 1
+    if len(needles) % 2 == 0:
+        start = 0
+
+    for needle in [*needles][start::2]:
         commands.append(command(instruction, direction, needle, carrier_id))
 
     commands.append(f"releasehook {carrier_id}\n")
