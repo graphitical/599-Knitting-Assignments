@@ -9,14 +9,22 @@ from knitting_machine.operation_sets import Carriage_Pass, Instruction_Type
 import argparse
 
 
-def preamble(carrier: int):
+def preamble():
     '''
     Just the header for the file
     '''
-    return f";!knitout-2\n;;Carriers: {carrier}\ninhook {carrier}\n"
+    output = f""";!knitout-2
+;;Machine: SWG091N2
+;;Gauge: 5
+;;Width: 250
+;;Carriers: 1 2 3 4 5 6 7 8 9 10
+;;Position: Center
+"""
+    return output
 
 
-def cast_on(direction: Pass_Direction, carrier: int):
+
+def cast_on(direction: Pass_Direction, carrier_id: int):
     '''
     Casting on is different than just running down a row so this interleaves the needles
     '''
@@ -75,7 +83,7 @@ if __name__ == '__main__':
 
     with open(args.output_file, 'w') as kfile:
         # write preamble
-        kfile.write(preamble(carrier_id))
+        kfile.write(preamble())
     
         # cast on
         kfile.write(cast_on(direction, carrier_id))
