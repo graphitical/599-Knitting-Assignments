@@ -70,10 +70,7 @@ def rib(width: int = 4, height: int = 4, rib_width: int = 1) -> Knit_Graph:
             if (idx % rib_width == 0):
                 pull_direction = pull_direction.opposite()
             
-            print(pull_direction)
-            print(f"parent: {parent_id}")
             child_id, child = yarn.add_loop_to_end()
-            print(f"child: {child_id}")
             next_course.append(child_id)
             knit_graph.add_loop(child)
             knit_graph.connect_loops(parent_id, child_id, pull_direction)
