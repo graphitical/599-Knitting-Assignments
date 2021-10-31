@@ -59,15 +59,21 @@ def rib(width: int = 4, height: int = 4, rib_width: int = 1) -> Knit_Graph:
 
     # make new courses of loops and connect them to the last course
     prior_course = first_course
-    for _ in range(1, height):
+    for course in range(1, height):
         next_course = []
-        pull_direction = Pull_Direction.FtB
-        for idx, parent_id in enumerate(reversed(prior_course), start=1):
+        if (course % 2 == 0): 
+            pull_direction = Pull_Direction.FtB
+        else:
+            pull_direction = Pull_Direction.BtF
+        for idx, parent_id in enumerate(reversed(prior_course)):
             # flip stitch type for ribbing effect
             if (idx % rib_width == 0):
                 pull_direction = pull_direction.opposite()
             
+            print(pull_direction)
+            print(f"parent: {parent_id}")
             child_id, child = yarn.add_loop_to_end()
+            print(f"child: {child_id}")
             next_course.append(child_id)
             knit_graph.add_loop(child)
             knit_graph.connect_loops(parent_id, child_id, pull_direction)
