@@ -190,7 +190,7 @@ def lace(width: int = 4, height: int = 4):
         first_row.append(loop_id)
         knitGraph.add_loop(loop)
 
-    def add_loop_and_knit(p_id):
+    def add_loop_and_knit(p_id, offset: int = 0):
         """
         Knits a loop into the graph
         :param p_id: the id of the parent loop being knit through
@@ -199,7 +199,7 @@ def lace(width: int = 4, height: int = 4):
         c_id, c = yarn.add_loop_to_end()
         next_row.append(c_id)
         knitGraph.add_loop(c)
-        knitGraph.connect_loops(p_id, c_id)
+        knitGraph.connect_loops(p_id, c_id, pull_direction=Pull_Direction.BtF, parent_offset=offset)
         return c_id
 
     prior_row = first_row
@@ -217,7 +217,7 @@ def lace(width: int = 4, height: int = 4):
                 prior_parent_id = parent_id
             elif col % 4 == 2:
                 child_id = add_loop_and_knit(parent_id)
-                knitGraph.connect_loops(prior_parent_id, child_id)
+                knitGraph.connect_loops(prior_parent_id, child_id, parent_offset=-1)
         prior_row = next_row
 
     return knitGraph
